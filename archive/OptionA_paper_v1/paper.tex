@@ -1,0 +1,684 @@
+\documentclass[aps,pra,reprint,amsmath,amssymb,superscriptaddress,nofootinbib,longbibliography]{revtex4-2}
+
+\usepackage{graphicx}
+\usepackage{amsfonts}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{bm}
+\usepackage{booktabs}
+
+\hypersetup{colorlinks=true, linkcolor=blue, citecolor=blue, urlcolor=blue}
+
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\Hil}{\mathcal{H}}
+\newcommand{\sigx}{\sigma_x}
+\newcommand{\sigy}{\sigma_y}
+\newcommand{\sigz}{\sigma_z}
+\newcommand{\bra}[1]{\langle #1 |}
+\newcommand{\ket}[1]{| #1 \rangle}
+\newcommand{\ip}[2]{\langle #1 | #2 \rangle}
+\newcommand{\Mob}{\mathrm{M\ddot{o}b}}
+\newcommand{\cyl}{\mathrm{cyl}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\atantwo}{\mathrm{atan2}}
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}{Lemma}
+\newtheorem{proposition}{Proposition}
+\newtheorem{corollary}{Corollary}
+
+\begin{document}
+
+\title{Discrete-Time Quantum Walks on M\"obius Graphs:\\
+       Topological Robustness Under Non-Orientability}
+
+\author{S. M. Yousuf Iqbal Tomal}
+\email{tomal@example.edu}
+\affiliation{Department of Computer Science and Engineering,
+             BRAC University, Dhaka, Bangladesh}
+
+\author{Abdullah Al Shafin}
+\affiliation{Department of Computer Science and Engineering,
+             BRAC University, Dhaka, Bangladesh}
+
+\date{\today}
+
+\begin{abstract}
+We study discrete-time quantum walks (DTQWs) on a one-dimensional M\"obius graph, defined as a length-$L$ position cycle with an anti-periodic boundary condition acting on the coin Hilbert space via the canonical deck operator $\Sigma = -\I_d$. We establish four results. (i) The M\"obius walker's quasi-energy spectrum is the cylinder bulk dispersion sampled at half-odd-integer crystal momenta $k_n = (2n+1)\pi/L$, with the time-reversal-invariant momenta $k = 0, \pi$ excluded from the M\"obius lattice. (ii) The split-step DTQW's chiral symmetry $\sigx U_{\rm sym} \sigx = U_{\rm sym}^{-1}$ in the symmetric time frame persists unchanged on the M\"obius walker. (iii) The discrete chiral winding number is identical on cylinder and M\"obius momentum lattices at every system size above an aliasing threshold of order four lattice points, off the four cylinder phase-boundary lines. The dramatic $\Z \to \Z_2$ topological reduction expected from spatial non-orientability does not occur for this canonical walker. (iv) The M\"obius ladder graph adjacency operator decomposes under rung-swap symmetry into a rung-symmetric sector identical to the prism graph and a rung-antisymmetric sector in which the M\"obius twist enters as an anti-periodic boundary condition on a cycle, producing half-odd-integer-momentum eigenvalues; this non-vanishing structural distinction propagates into the Szegedy walker spectrum without invoking any coin or chiral structure. Numerical experiments at $L \in \{50, 100, 200\}$ validate all four results at machine precision and provide the empirical aliasing-threshold values. The work is a precise characterization of how M\"obius non-orientability does and does not manifest in coined Floquet quantum walks; it rules out one path to non-trivial non-orientable Floquet topology and points to a complementary setting---non-canonical deck operators with redesigned walker structure---where richer topological consequences are likely.
+\end{abstract}
+
+\maketitle
+
+
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{Background}
+
+The one-dimensional discrete-time quantum walk (DTQW) is a paradigmatic Floquet unitary in low-dimensional quantum information science~\cite{kitagawa2010,asbothObuse2013,asbothEdge2015,cedzich2018,rakovszky2015}. Realized in photonic, trapped-ion, atomic, and superconducting platforms, the DTQW serves both as a quantum-algorithmic primitive (for search and simulation) and as a tractable testing ground for topological-classification questions that are typically more involved in continuum settings~\cite{rudner2013,higashikawa2019}.
+
+The chiral-symmetric one-dimensional split-step DTQW, introduced by Kitagawa, Rudner, Berg, Refael, and Demler in 2010~\cite{kitagawa2010} and refined by Asb\'oth, Obuse, and Edge in subsequent work~\cite{asbothObuse2013,asbothEdge2015}, has a complete topological classification. Two integer winding numbers $\nu_\pm \in \Z$ in the two chiral subspaces label distinct gapped phases; the phase boundaries are the four lines $\theta_1 \pm \theta_2 \in \{0, \pi\}$ in the two-angle parameter space; and bulk-edge correspondence relates the bulk winding to the count of zero-quasi-energy modes localized at hard-wall cuts.
+
+All such treatments to date have considered orientable underlying spatial topologies: the line, the cylinder (periodic boundary), and the torus in higher dimensions. The natural question---whether \emph{non-orientable} spatial topology produces qualitatively new topological structure---has remained largely unexplored in the DTQW context. The continuum-Hamiltonian analogue has been studied by Beugeling, Quelle, and Morais Smith~\cite{beugeling2014,quelle2014}, who showed that on a M\"obius band, the Chern number obstruction (a continuum result for orientable surfaces) is absent; the quantum spin Hall effect can nonetheless survive via the orientable double cover. The Floquet-driven extension by the same group~\cite{quelle2014} uses a continuous time-periodic drive on a tight-binding Hamiltonian. Neither work is directly about the discrete-time Floquet-unitary framework.
+
+The closest precedent in the quantum-walk literature is a 2017 paper by Moradi and Annabestani~\cite{moradi2017} titled ``M\"obius Quantum Walk,'' which constructs a walker on a cycle augmented with an extra rotation Hilbert space; the questions addressed (mixing time, limiting distribution) are entirely distinct from topological classification, and the deck-operator construction we adopt here is not present in that work. Continuous-time quantum walks on M\"obius strips have been studied by Dai et al.~\cite{dai2012} and Delanty and Steel~\cite{delanty2012}; both are in a different walker class (Hamiltonian-driven) and do not address Floquet topology.
+
+A 2025 preprint by another group~\cite{floquet_mobius_TI_2025} introduces ``Floquet M\"obius topological insulators''---but in that work, ``M\"obius'' refers to a band-structure twist in momentum space (M"obius-twisted edge bands of a periodically driven 2D Hamiltonian), not to physical M\"obius geometry. The two senses of ``M\"obius'' must be carefully distinguished; we will use the phrase ``M\"obius graph'' throughout to specify our (spatial-topology) sense.
+
+\subsection{The premise of this work}
+
+We extend the chiral split-step DTQW to a one-dimensional M\"obius graph: a length-$L$ position cycle with the wrap-around boundary identification implemented through a deck operator $\Sigma$ acting on the coin Hilbert space. The deck operator must satisfy $\Sigma^2 = \I_d$ (so that two traversals of the position circle return the identity).
+
+A natural physical motivation: spatial non-orientability is the simplest non-trivial $\Z_2$-bundle structure, and the M\"obius strip is the universal classifying space for principal $\Z_2$-bundles in low dimensions. In quantum information, $\Z_2$ structure is fundamental to spin-$\tfrac{1}{2}$/$\mathrm{SU}(2)$ double covers, fermion parity, time-reversal $T^2 = \pm 1$, particle-hole symmetry $C^2 = 1$, and the topological invariants of symmetry classes D and BDI. One can reasonably conjecture that adding non-orientability to the chiral DTQW classification reduces the integer winding-number $\Z$ classification to a finer $\Z_2$ invariant---a Floquet analogue of the well-known dimensional-reduction patterns in the symmetry-class taxonomy.
+
+\subsection{Our results, in one paragraph}
+
+We show that this conjecture is incorrect for the \emph{canonical} M\"obius walker: $\Sigma = -\I_d$, the unique deck operator (up to phase) compatible with the standard split-step coin rotations. The chiral integer winding number is invariant under the cylinder-to-M\"obius momentum-lattice translation at every system size $L$ above an aliasing threshold. The quasi-energy spectrum differs from the cylinder by a uniform $\pi/L$ momentum shift that vanishes asymptotically. A non-trivial structural distinction does persist in the Szegedy walker on the M\"obius ladder graph: the rung-antisymmetric sector of the graph's adjacency operator carries an anti-periodic boundary condition that distinguishes it from the prism (cylinder) graph. This last distinction is purely graph-theoretic; it does not involve any coin or chiral structure.
+
+The paper is therefore a precise \emph{negative-result} characterization: spatial non-orientability, in its minimal one-dimensional realization compatible with the standard split-step DTQW, does not lift the integer chiral classification to $\Z_2$. The result rules out one path to non-trivial non-orientable Floquet topology and constrains where future work should look (Section~\ref{sec:discussion}).
+
+\subsection{Structure of the paper}
+
+Section~\ref{sec:model} defines the walk operators on cylinder and M\"obius graphs and establishes the canonical deck-operator constraint. Section~\ref{sec:theorems} states and proves the four main results. Section~\ref{sec:numerics} reports numerical experiments; all theorems are validated at machine precision. Section~\ref{sec:discussion} discusses implications, situates the work in the broader DTQW topology and non-orientable-Hamiltonian literatures, and points to a natural follow-up direction in which the central deck-operator constraint is relaxed. Appendices contain detailed Bloch-matrix calculations, the explicit time-frame change for chiral symmetry, and the M\"obius ladder eigenvector catalog.
+
+
+\section{Model}
+\label{sec:model}
+
+\subsection{Graphs}
+
+\textbf{Cylinder graph $\mathcal{G}_L^{\cyl}$.} Vertex set $\{0, 1, \dots, L-1\}$, identified topologically with $\Z/L\Z$. All position arithmetic is mod $L$. The wrap-around edge connects vertex $L-1$ back to vertex $0$ without further structure.
+
+\textbf{M\"obius graph $\mathcal{G}_L^\Mob$.} Same vertex set, but the wrap-around carries a unitary twist on the coin Hilbert space: traversing the boundary from $L-1$ to $0$ acts as $\Sigma$ on the coin, where $\Sigma$ is a fixed unitary on $\C^d$ satisfying $\Sigma^2 = \I_d$.
+
+\textbf{Walker Hilbert space.} For a coined DTQW with $d$-dimensional coin space $\C^d$ (we will mostly take $d = 2$):
+\begin{align}
+\mathcal{H}_L^\cyl &= \{\psi: \Z/L\Z \to \C^d\}, \quad \dim = Ld, \\
+\mathcal{H}_L^\Mob &= \{\psi: \Z \to \C^d \mid \psi(x{+}L, c) = \Sigma\,\psi(x, c)\}.
+\end{align}
+The M\"obius space has the same dimension $Ld$, since the constraint reduces a $2L$-point function to one set of values modulo the $\Sigma$ identification.
+
+\subsection{The canonical deck operator}
+\label{sec:canonical_deck}
+
+We now show that for the standard chiral split-step coin rotations $R(\theta) = e^{-i\theta\sigy/2}$ and the standard spin-dependent shift, the only deck operators consistent with the quotient construction of the M\"obius walker (Section~\ref{sec:walker_def}) are $\Sigma = \pm\I_d$. The choice $\Sigma = +\I$ gives the cylinder; $\Sigma = -\I$ gives the canonical M\"obius walker studied here.
+
+\begin{proposition}[Canonical deck]
+\label{prop:canonical_deck}
+For the split-step DTQW defined in Section~\ref{sec:walker_def} below, the deck operator $\Sigma \in \mathrm{U}(d)$ must commute with both $R(\theta)$ for all $\theta$ and the coin part of the spin-dependent shift, in order for the M\"obius walker to be realizable as the restriction of a $2L$-cylinder walker to a $\Sigma$-eigenspace. For $d = 2$ and the rotation $R(\theta) = e^{-i\theta\sigy/2}$, the joint condition forces $\Sigma \in \{+\I_2, -\I_2\}$.
+\end{proposition}
+
+\begin{proof}
+Commuting with $R(\theta) = \cos(\theta/2)\I - i\sin(\theta/2)\sigy$ for all $\theta$ requires $[\Sigma, \sigy] = 0$. Commuting with the spin-dependent shift's coin part---which is built from the $\sigz$-projectors $\ket{R}\bra{R} = (\I + \sigz)/2$ and $\ket{L}\bra{L} = (\I - \sigz)/2$---requires $[\Sigma, \sigz] = 0$. The intersection of the commutants of $\sigy$ and $\sigz$ in $\mathrm{U}(2)$ is the set of multiples of identity. Requiring also $\Sigma^2 = \I$ leaves $\Sigma \in \{+\I, -\I\}$.
+\end{proof}
+
+\textbf{Project commitment.} We commit to $\Sigma = -\I_2$ throughout the remainder of this paper. This is the unique non-trivial deck operator consistent with the standard split-step. Non-canonical deck operators (e.g., $\Sigma = \sigx$), which require concurrent modification of the shift structure to maintain unitarity, lie outside the scope of this work; we return to them as a natural follow-up direction in Section~\ref{sec:discussion}.
+
+\subsection{The split-step walk operator}
+\label{sec:walker_def}
+
+The coin space is $\C^2$ with basis $\{\ket{R}, \ket{L}\}$. The spin-dependent half-shifts are
+\begin{align}
+S_+ &= T \otimes \ket{R}\bra{R} + \I \otimes \ket{L}\bra{L}, \\
+S_- &= \I \otimes \ket{R}\bra{R} + T^{-1} \otimes \ket{L}\bra{L},
+\end{align}
+where $T : \ket{x} \mapsto \ket{(x{+}1) \bmod L}$ is the position translation operator. Both $S_\pm$ are unitary. The coin rotation $R(\theta) = e^{-i\theta\sigy/2}$ has explicit form
+\begin{equation}
+R(\theta) = \begin{pmatrix} \cos(\theta/2) & -\sin(\theta/2) \\ \sin(\theta/2) & \cos(\theta/2) \end{pmatrix},
+\end{equation}
+which is real-valued; it parametrizes an $\mathrm{SO}(2)$ rotation of the coin basis.
+
+The Kitagawa split-step walker is
+\begin{equation}
+\boxed{
+U(\theta_1, \theta_2) = S_-\, R(\theta_2)\, S_+\, R(\theta_1)\, .
+}
+\label{eq:walker}
+\end{equation}
+Here $R(\theta_i)$ is interpreted as $\I_L \otimes R(\theta_i)$ acting trivially on position. The walker depends on two real angles $\theta_1, \theta_2 \in [0, \pi]$.
+
+\textbf{Implementation of the M\"obius BC.} Operationally, the M\"obius walker is constructed by setting the wrap-around entry of $T$'s matrix representation to $-1$ instead of $+1$. With this single sign change in one matrix entry, the walker $U(\theta_1, \theta_2)$ as a $2L \times 2L$ unitary becomes the M\"obius walker on $\mathcal{H}_L^\Mob$. All sanity tests verify that this implementation satisfies $T_\Mob^L = -\I_L$ to exact zero in floating point (the $-1$ wrap entry produces an exact sign cancellation under matrix powers).
+
+\subsection{Bloch decomposition}
+\label{sec:bloch}
+
+Both cylinder and M\"obius walkers commute with their respective position translations and therefore admit a Bloch decomposition.
+
+\textbf{Cylinder.} Plane waves $\ket{k, c}^\cyl = L^{-1/2}\sum_x e^{ikx}\ket{x, c}$ with $k \in K_L^\cyl := \{2\pi n / L : n = 0, \dots, L-1\}$ block-diagonalize $U$ into $2 \times 2$ unitaries $U(k; \theta_1, \theta_2)$.
+
+\textbf{M\"obius.} Plane waves of the same functional form but with anti-periodic boundary: $\psi(x+L) = -\psi(x)$, i.e., $e^{ikL} = -1$, yielding $k \in K_L^\Mob := \{(2n+1)\pi/L : n = 0, \dots, L-1\}$. The Bloch matrix $U(k; \theta_1, \theta_2)$ is identical in form to the cylinder case; only the discrete momentum domain differs.
+
+\textbf{Explicit Bloch matrix.} A direct calculation (Appendix~\ref{app:bloch}) gives
+\begin{widetext}
+\begin{equation}
+U(k; \theta_1, \theta_2) = \begin{pmatrix}
+c_1 c_2 e^{ik} - s_1 s_2 & -c_2 s_1 e^{ik} - s_2 c_1 \\
+c_1 s_2 + c_2 s_1 e^{-ik} & c_1 c_2 e^{-ik} - s_1 s_2
+\end{pmatrix},
+\label{eq:U_k_matrix}
+\end{equation}
+\end{widetext}
+where $c_i := \cos(\theta_i/2)$, $s_i := \sin(\theta_i/2)$. The matrix is in $\mathrm{SU}(2)$ ($\det U = 1$ from the half-shifts' opposite-sign determinants), and its trace
+\begin{equation}
+\Tr U(k) = 2 c_1 c_2 \cos k - 2 s_1 s_2
+\end{equation}
+gives the bulk dispersion
+\begin{equation}
+\boxed{
+\cos\varepsilon(k; \theta_1, \theta_2) = c_1 c_2 \cos k - s_1 s_2\, .
+}
+\label{eq:dispersion}
+\end{equation}
+
+\subsection{Hadamard and three-state Grover walkers}
+
+For demonstrations of protocol-independence, we also use the Hadamard walker
+\begin{equation}
+U_H = F \cdot (\I \otimes H),\quad F = T \otimes \ket{R}\bra{R} + T^{-1} \otimes \ket{L}\bra{L},
+\end{equation}
+where $H = (1/\sqrt{2})\begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix}$ is the Hadamard coin, and the three-state Grover walker
+\begin{equation}
+U_{G_3} = S_3 \cdot (\I \otimes G_3),
+\end{equation}
+where $G_3 = (2/3) J_3 - \I_3$ ($J_3$ all-ones) and $S_3$ is the three-state spin-dependent shift on $\C^3$ with basis $\{\ket{0}, \ket{+}, \ket{-}\}$ (stay, right, left). Both walkers commute trivially with $\Sigma = -\I_d$ and lift to their M\"obius variants by the same boundary-condition mechanism.
+
+\subsection{M\"obius ladder and prism graphs}
+\label{sec:ladder}
+
+For coinless Szegedy walks (Section~\ref{thm:szegedy_contrast}), the bare 1-D M"obius graph is trivially the same as the cylinder, so we instead use the 2-D M"obius \emph{ladder} graph.
+
+\textbf{M"obius ladder $M_L$.} Vertex set $\{(x, r) : x \in \Z/L\Z,\; r \in \{0, 1\}\}$, $|V| = 2L$. Edges:
+\begin{itemize}
+\item Rung: $(x, 0) \sim (x, 1)$ for all $x$.
+\item In-row non-boundary: $(x, r) \sim (x+1, r)$ for $x \in \{0, \dots, L-2\}$, $r \in \{0, 1\}$.
+\item Twisted boundary: $(L-1, r) \sim (0, 1-r)$ for $r \in \{0, 1\}$.
+\end{itemize}
+
+\textbf{Prism graph $Y_L = C_L \square K_2$.} Same vertices and edges except untwisted boundary: $(L-1, r) \sim (0, r)$.
+
+Both graphs are 3-regular with $|E| = 3L$ undirected edges.
+
+
+\section{Main Theorems}
+\label{sec:theorems}
+
+\subsection{T1: Half-odd-integer momentum quantization}
+
+\begin{theorem}[Spectrum quantization]
+\label{thm:T1}
+For the canonical M\"obius DTQW $U^\Mob(\theta_1, \theta_2)$ on $\mathcal{H}_L^\Mob$, the quasi-energy spectrum is
+\begin{equation}
+\mathrm{spec}\,U^\Mob = \big\{e^{\pm i \varepsilon(k_n^\Mob; \theta_1, \theta_2)}\big\}_{n=0}^{L-1},
+\end{equation}
+with $k_n^\Mob = (2n+1)\pi/L$ and $\varepsilon(k; \theta_1, \theta_2)$ the cylinder bulk dispersion of Eq.~\eqref{eq:dispersion}. In contrast, the cylinder walker's spectrum samples the same dispersion at $k_n^\cyl = 2\pi n/L$. The time-reversal-invariant momentum $k = 0$ is absent from the M\"obius spectrum for any $L$; $k = \pi$ is absent for $L$ even and present for $L$ odd.
+\end{theorem}
+
+\begin{proof}
+We exhibit the M\"obius walker as the restriction of a $2L$-periodic cylinder walker to an anti-periodic subspace, then read off the spectrum.
+
+Consider the cylinder walker $U^{\cyl,2L}$ on $\mathcal{H}_{2L}^\cyl$, a Hilbert space of dimension $2L \cdot 2 = 4L$ (we keep $d = 2$). Define the deck operator
+\begin{equation}
+D := T^L \otimes \Sigma, \qquad \Sigma = -\I_2.
+\end{equation}
+Since $T^{2L} = \I$ on the $2L$-periodic system, $D^2 = T^{2L} \otimes \I = \I$, so $D$ has eigenvalues $\pm 1$ partitioning $\mathcal{H}_{2L}^\cyl$ into eigenspaces of dimension $2L$ each.
+
+We claim that the $D = -1$ eigenspace is unitarily isomorphic to $\mathcal{H}_L^\Mob$. Indeed, a state $\psi \in \mathcal{H}_{2L}^\cyl$ satisfying $D \psi = -\psi$ obeys $\psi(x + L, c) = -\psi(x, c)$, which is exactly the M\"obius identification. Restriction to $\{0, \dots, L-1\}$ gives a state in $\mathcal{H}_L^\Mob$; the inverse map extends by anti-periodicity. The map is unitary in the natural inner products.
+
+The cylinder walker $U^{\cyl, 2L}$ commutes with $D$: both $S_\pm$ and the coin rotations commute with $T^L$ (translation invariance), and $\Sigma = -\I$ commutes with everything. Therefore $U^{\cyl, 2L}$ preserves the $D = -1$ eigenspace, and its restriction is unitary on that subspace.
+
+The restriction acts in momentum representation: plane waves $\ket{k, c}^{2L} = (2L)^{-1/2} \sum_{x=0}^{2L-1} e^{ikx} \ket{x, c}$ with $k \in \{0, \pi/L, 2\pi/L, \dots, (2L-1)\pi/L\}$ diagonalize $D$ to $e^{ikL}$. The $D = -1$ subspace consists of momenta with $e^{ikL} = -1$, i.e., $k \in K_L^\Mob = \{(2n+1)\pi/L\}$.
+
+On the restriction, the walker acts as the same Bloch matrix $U(k; \theta_1, \theta_2)$ derived for the cylinder, since both $D$ and $U^{\cyl, 2L}$ are diagonal in the same momentum basis. The eigenvalues are $e^{\pm i \varepsilon(k_n^\Mob)}$ for the half-odd-integer momenta.
+
+Finally, $0 \notin K_L^\Mob$ for any $L$. The point $\pi \in K_L^\Mob$ iff $(2n+1)\pi/L = \pi$ for some integer $n \in \{0, \dots, L-1\}$, i.e., iff $L = 2n+1$ is odd.
+\end{proof}
+
+\subsection{Chiral symmetry in the symmetric time frame}
+
+The split-step walker (\ref{eq:walker}) does not have a chiral symmetry manifest in the natural ``asymmetric'' time frame: a direct computation (Appendix~\ref{app:chiral_frame}) shows that the Bloch vector $\mathbf{a}(k) = (a_x, a_y, a_z)(k)$ does not lie in any fixed parameter-independent plane through the origin. A cyclic permutation of the four factors to the \emph{symmetric} time frame is required.
+
+\begin{proposition}[Chiral operator in the symmetric frame]
+\label{prop:chiral}
+Define
+\begin{equation}
+U_{\rm sym}(\theta_1, \theta_2) := R(\theta_1/2)\, S_-\, R(\theta_2)\, S_+\, R(\theta_1/2).
+\label{eq:U_sym}
+\end{equation}
+Then for all $(\theta_1, \theta_2)$, both on cylinder and on the canonical M\"obius walker,
+\begin{equation}
+\sigx\, U_{\rm sym}\, \sigx = U_{\rm sym}^{-1}.
+\end{equation}
+The chiral operator $\Gamma = \sigx$ is parameter-independent.
+\end{proposition}
+
+\begin{proof}
+The transformation from the asymmetric to the symmetric time frame is a unitary similarity $U_{\rm sym} = R(\theta_1/2)\, U(\theta_1, \theta_2)\, R(-\theta_1/2)$, using $R(\theta_1) R(-\theta_1/2) = R(\theta_1/2)$. Under this conjugation, the Bloch vector $\mathbf{a}(k)$ in the asymmetric frame rotates in the $xz$-plane by angle $-\theta_1/2$.
+
+Computing the asymmetric-frame Bloch coefficients from the matrix \eqref{eq:U_k_matrix}:
+\begin{align}
+a_0(k) &= c_1 c_2 \cos k - s_1 s_2, \\
+a_x(k) &= c_2 s_1 \sin k, \\
+a_y(k) &= c_1 s_2 + c_2 s_1 \cos k, \\
+a_z(k) &= -c_1 c_2 \sin k.
+\end{align}
+Applying the rotation in the $xz$-plane by angle $-\theta_1/2$, i.e.,
+\begin{align}
+a_x'(k) &= \cos(\theta_1/2)\, a_x(k) + \sin(\theta_1/2)\, a_z(k), \\
+a_z'(k) &= -\sin(\theta_1/2)\, a_x(k) + \cos(\theta_1/2)\, a_z(k),
+\end{align}
+and plugging in $a_x = c_2 s_1 \sin k = c_2 \sin(\theta_1/2)\sin k$, $a_z = -c_1 c_2 \sin k = -c_2 \cos(\theta_1/2)\sin k$:
+\begin{align}
+a_x'(k) &= c_2 \sin k\, [\sin(\theta_1/2)\cos(\theta_1/2) - \cos(\theta_1/2)\sin(\theta_1/2)] \nonumber\\ &= 0, \\
+a_z'(k) &= -c_2 \sin k\, [\sin^2(\theta_1/2) + \cos^2(\theta_1/2)] \nonumber\\ &= -c_2 \sin k.
+\end{align}
+$a_x'$ vanishes identically. The remaining symmetric-frame Bloch vector is
+\begin{equation}
+\mathbf{a}'(k) = \big(0,\; c_1 s_2 + c_2 s_1 \cos k,\; -c_2 \sin k\big),
+\label{eq:a_prime}
+\end{equation}
+which lies in the $yz$-plane for all $(k, \theta_1, \theta_2)$. The unit normal to this plane is $\hat{\mathbf{x}}$. Therefore $\sigx \mathbf{a}'(k) \cdot \boldsymbol{\sigma}\, \sigx = -\mathbf{a}'(k) \cdot \boldsymbol{\sigma}$, and $\sigx U_{\rm sym}(k) \sigx = U_{\rm sym}(k)^\dagger = U_{\rm sym}(k)^{-1}$.
+
+On the M\"obius walker, the deck operator $\Sigma = -\I_2$ commutes trivially with $\sigx$, so the chiral relation lifts unchanged to the M\"obius Hilbert space. The Bloch matrix at each $k \in K_L^\Mob$ is identical to the cylinder Bloch matrix at the same $k$.
+\end{proof}
+
+\subsection{T-D4: Winding-number equality theorem}
+
+Proposition~\ref{prop:chiral} gives an integer-valued topological invariant for both the cylinder and M\"obius walkers: the winding of $\mathbf{a}'(k)$ in the $yz$-plane as $k$ runs once around $[0, 2\pi)$. We now show this integer is identical for cylinder and M\"obius lattices.
+
+\textbf{Definition.} The angle function is
+\begin{equation}
+\phi(k; \theta_1, \theta_2) := \atantwo\!\big(a_z'(k),\, a_y'(k)\big) \in (-\pi, \pi].
+\end{equation}
+The continuous winding is
+\begin{equation}
+\nu^\infty(\theta_1, \theta_2) := \frac{1}{2\pi} \oint_0^{2\pi} \partial_k \phi(k)\, dk \in \Z,
+\end{equation}
+and the discrete winding on a momentum lattice $K = \{k_0 < k_1 < \dots < k_{L-1}\} \subset [0, 2\pi)$ with $k_L \equiv k_0 + 2\pi$ is
+\begin{equation}
+\nu_L(K) := \frac{1}{2\pi} \sum_{n=0}^{L-1} \widehat{\Delta\phi}_n,
+\end{equation}
+where $\widehat{\Delta\phi}_n := \mathrm{prv}(\phi(k_{n+1}) - \phi(k_n))$ and $\mathrm{prv}(x) := ((x+\pi) \bmod 2\pi) - \pi \in (-\pi, \pi]$ is the principal-value branch (``unwrap'').
+
+\begin{theorem}[Winding equality]
+\label{thm:winding}
+For $(\theta_1, \theta_2) \in (0, \pi)^2$ with $\theta_1 \pm \theta_2 \notin \{0, \pi\}$ (i.e., off all four cylinder phase-boundary lines), there exists an integer $L_0(\theta_1, \theta_2) \geq 4$ such that for all $L \geq L_0$,
+\begin{equation}
+\nu_L(K_L^\cyl) = \nu_L(K_L^\Mob) = \nu^\infty(\theta_1, \theta_2).
+\end{equation}
+\end{theorem}
+
+We prove this via three lemmas.
+
+\begin{lemma}[Riemann-sum equality under no aliasing]
+\label{lem:noalias}
+If $\phi : S^1 \to S^1$ is continuous, $K \subset [0, 2\pi)$ is an ordered $L$-point lattice with $k_L = k_0 + 2\pi$, and $|\widehat{\Delta\phi}_n| < \pi$ for all $n$, then $\nu_L(K) = \nu^\infty$.
+\end{lemma}
+
+\begin{proof}
+Telescoping the unwrapped sum,
+\begin{align}
+\sum_n \widehat{\Delta\phi}_n &= \sum_n (\phi(k_{n+1}) - \phi(k_n) - 2\pi m_n) \notag\\
+&= \phi(k_L) - \phi(k_0) - 2\pi \sum_n m_n,
+\end{align}
+where $m_n \in \Z$ are the (uniquely determined) wraps satisfying $|\phi(k_{n+1}) - \phi(k_n) - 2\pi m_n| < \pi$. Since $\phi(k_L) = \phi(k_0)$ on $S^1$, the sum equals $-2\pi \sum_n m_n \in 2\pi\Z$. Hence $\nu_L(K) \in \Z$. The Riemann-sum approximation to the continuous integral has error $O(1/L)$, and the difference of two integers can be at most an integer, so it is $0$ for $L$ sufficiently large.
+\end{proof}
+
+\begin{lemma}[Existence of an aliasing threshold]
+\label{lem:threshold}
+Let $\phi: S^1 \to S^1$ be continuously differentiable with $\max_k |\partial_k \phi| < \infty$. Define
+\begin{equation}
+L_0(\phi) := \left\lceil \frac{2}{\pi} \max_{k} |\partial_k \phi(k)| \right\rceil + 1.
+\end{equation}
+Then for all $L \geq L_0$ and any lattice $K \subset [0, 2\pi)$ with $L$ uniformly spaced points (cylinder or M\"obius), the no-aliasing condition $|\widehat{\Delta\phi}_n| < \pi$ holds.
+\end{lemma}
+
+\begin{proof}
+By the mean-value theorem,
+\begin{equation}
+|\phi(k_{n+1}) - \phi(k_n)| \leq |k_{n+1} - k_n| \cdot \max_k|\partial_k\phi| \leq \frac{2\pi}{L} \max_k|\partial_k\phi|.
+\end{equation}
+This is bounded by $\pi$ exactly when $L \geq 2 \max_k|\partial_k\phi|/\pi$, i.e., $L \geq L_0$.
+\end{proof}
+
+The threshold $L_0(\phi)$ diverges as $(\theta_1, \theta_2)$ approaches a phase-boundary line, because the gap closing produces an unbounded $\partial_k \phi$ at that $k$. On any compact subset of the open phase region, however, $L_0$ is uniformly finite.
+
+\begin{lemma}[Discrete-winding translation invariance]
+\label{lem:translation}
+For $\phi: S^1 \to S^1$ continuous and $L \geq L_0(\phi)$, let $K(\delta) := \{(2\pi n + \delta)/L : n = 0, \dots, L-1\}$ be the uniform $L$-point lattice shifted by $\delta \in [0, 2\pi)$. The map $\delta \mapsto \nu_L(K(\delta))$ is constant.
+\end{lemma}
+
+\begin{proof}
+By Lemma~\ref{lem:noalias} and~\ref{lem:threshold}, $\nu_L(K(\delta)) = \nu^\infty$ for every $\delta$, since the no-aliasing condition holds uniformly in $\delta$ (the bound in Lemma~\ref{lem:threshold} depends on $\phi$ and $L$ but not on $\delta$).
+\end{proof}
+
+\begin{proof}[Proof of Theorem~\ref{thm:winding}]
+The cylinder lattice is $K(0)$ and the M\"obius lattice is $K(\pi)$. Both are translations of the same uniform $L$-point lattice. By Lemma~\ref{lem:translation}, $\nu_L(K_L^\cyl) = \nu_L(K_L^\Mob) = \nu^\infty$ for all $L \geq L_0$.
+\end{proof}
+
+The threshold $L_0$ in practice is small: empirically, $L_0 \in \{4, 5\}$ for tested interior points (Section~\ref{sec:numerics}), only marginally above the minimum lattice size at which a winding integer can be defined.
+
+\subsection{T-D7: M\"obius ladder spectrum decomposition}
+
+We now turn to coinless walkers, specifically the Szegedy walk on the M\"obius ladder graph $M_L$ (Section~\ref{sec:ladder}). The first step is the M\"obius ladder adjacency spectrum.
+
+\begin{theorem}[Adjacency spectra]
+\label{thm:ladder_spectrum}
+The adjacency operators of $Y_L$ and $M_L$ have spectra
+\begin{align}
+\mathrm{spec}(A_{Y_L}) &= \big\{2\cos(2\pi n/L) \pm 1\big\}_{n=0}^{L-1}, \\
+\mathrm{spec}(A_{M_L}) &= \big\{2\cos(2\pi n/L) + 1\big\}_{n=0}^{L-1}\notag\\
+&\quad\cup\, \big\{2\cos((2n+1)\pi/L) - 1\big\}_{n=0}^{L-1}.
+\end{align}
+\end{theorem}
+
+\begin{proof}
+Both graphs admit the rung-swap involution $\tau: (x, r) \mapsto (x, 1-r)$ as a graph automorphism, so $[\tau, A_G] = 0$ for $G \in \{Y_L, M_L\}$. The Hilbert space $\C^{2L}$ decomposes under $\tau$ into eigenspaces $V_+ \oplus V_-$ of dimension $L$ each:
+\begin{align}
+V_+ &= \{\psi : \psi(x, 0) = \psi(x, 1) =: v_+(x)\}, \\
+V_- &= \{\psi : \psi(x, 0) = -\psi(x, 1) =: v_-(x)\}.
+\end{align}
+$A_G$ preserves this decomposition. We compute the restriction on each sector.
+
+\textbf{Sector $V_+$.} For $\psi \in V_+$, the action of $A_G$ at vertex $(x, r)$ sums contributions from the rung neighbor (with $\psi = v_+(x)$), the in-row left neighbor (with $\psi = v_+(x-1)$), and the in-row right neighbor (with $\psi = v_+(x+1)$). Both untwisted and twisted boundary edges contribute $\psi(0, r')$ which equals $v_+(0)$ regardless of $r'$ (since $\psi$ is $r$-symmetric in $V_+$). Hence
+\begin{equation}
+A_G\big|_{V_+}\, v_+(x) = v_+(x-1) + v_+(x) + v_+(x+1)
+\end{equation}
+with periodic indexing mod $L$, for \emph{both} $G = Y_L$ and $G = M_L$. This is $A_{C_L} + \I_L$, where $A_{C_L}$ is the cycle-graph adjacency. Its spectrum is $\{2\cos(2\pi n/L) + 1\}$.
+
+\textbf{Sector $V_-$, prism $Y_L$.} For $\psi \in V_-$, the rung contributes $-v_-(x)$ and the in-row neighbors contribute $\pm v_-(x \pm 1)$ depending on $r$. The boundary edge (untwisted) at $r = 0$ contributes $\psi(0, 0) = v_-(0)$. The result is
+\begin{equation}
+A_{Y_L}\big|_{V_-}\, v_-(x) = -v_-(x) + v_-(x-1) + v_-(x+1)
+\end{equation}
+with periodic indexing; this is $A_{C_L} - \I_L$ with spectrum $\{2\cos(2\pi n/L) - 1\}$.
+
+\textbf{Sector $V_-$, M\"obius $M_L$.} The twisted boundary connects $(L-1, 0)$ to $(0, 1)$, with $\psi(0, 1) = -v_-(0)$. The boundary contribution acquires a sign flip relative to the untwisted case:
+\begin{equation}
+(A\psi)(L-1, 0) = -v_-(L-1) + v_-(L-2) - v_-(0).
+\end{equation}
+This is equivalent to the periodic formula but with $v_-$ extended anti-periodically: $v_-(x+L) := -v_-(x)$. The eigenstates are plane waves $v_-^{(n)}(x) = L^{-1/2} e^{ik_n x}$ with $e^{i k_n L} = -1$, giving $k_n = (2n+1)\pi/L$. The corresponding eigenvalues are $2\cos((2n+1)\pi/L) - 1$.
+
+Combining the two sectors yields the claimed spectrum for each graph.
+\end{proof}
+
+\begin{corollary}[Szegedy contrast]
+\label{thm:szegedy_contrast}
+The Szegedy walker on a uniform random walk on the 3-regular graph $G$ has eigenvalues
+\begin{equation}
+\mathrm{spec}(U^{\rm Sze}_G) = \{e^{\pm i \arccos(\lambda/3)}\}_{\lambda \in \mathrm{spec}(A_G)},
+\end{equation}
+plus possible $\pm 1$ eigenvalues from the edge-subspace kernel~\cite{szegedy2004}. By Theorem~\ref{thm:ladder_spectrum}, $\mathrm{spec}(A_{Y_L})$ and $\mathrm{spec}(A_{M_L})$ differ in the rung-antisymmetric sector at every $L$, with the difference $2\cos((2n+1)\pi/L) - 2\cos(2\pi n/L) \neq 0$ for generic $n, L$. Therefore $\mathrm{spec}(U^{\rm Sze}_{Y_L}) \neq \mathrm{spec}(U^{\rm Sze}_{M_L})$, and the distinction does not vanish in the $L \to \infty$ limit at fixed mode density.
+\end{corollary}
+
+This is the structural distinction promised in Section~\ref{sec:intro}. It involves no coin space, no chiral symmetry, and no $\Sigma$ commutation analysis; the entire mechanism is the graph-theoretic rung-swap decomposition combined with the twisted-vs-untwisted boundary edge.
+
+
+\section{Numerical Results}
+\label{sec:numerics}
+
+All computations use NumPy/SciPy on a standard laptop CPU. The full notebook (\texttt{mobius\_dtqw\_simulator.ipynb}) is publicly available in the companion repository and reproduces every figure and number reported here in approximately one minute end-to-end. We use $L \in \{50, 100, 200\}$ unless otherwise noted, with $L = 50$ as the default.
+
+\subsection{Sanity tests}
+
+The following are verified at machine precision before any new figure:
+\begin{enumerate}
+\item \emph{Unitarity.} For split-step, Hadamard, and three-state Grover walkers on both cylinder and M\"obius BCs at $L \in \{50, 100\}$: $\|U^\dagger U - \I\|/\dim < 10^{-16}$.
+\item \emph{Boundary condition.} $T_\Mob^L = -\I_L$ exactly (no floating-point drift), for $L \in \{10, 50, 100\}$.
+\item \emph{Bloch-position consistency.} The full $2L \times 2L$ real-space walker spectrum matches the union of $L$ Bloch-decomposed $2 \times 2$ spectra to relative error $< 10^{-14}$, on both cylinder and M\"obius.
+\end{enumerate}
+
+All 19 sanity-test instances pass. Numerical details and the exact paste-ready test code are in the companion notebook \S2.
+
+\subsection{N1: spectrum (Theorem~\ref{thm:T1})}
+
+\textbf{Setup.} $(\theta_1, \theta_2) = (\pi/3, \pi/4)$; $L = 50$. We diagonalize the $100 \times 100$ walker matrix on cylinder and M\"obius, and overlay the eigenvalues on the analytical bulk dispersion (\ref{eq:dispersion}). Figure~\ref{fig:spectrum} shows the result.
+
+\textbf{Observations.}
+\begin{itemize}
+\item Cylinder eigenvalues lie at $k_n = 2\pi n/L$ for $n \in \{0, \dots, 49\}$; the $k = 0$ TRIM is occupied (one eigenvalue pair at $\varepsilon \approx \pm 0.92$).
+\item M\"obius eigenvalues lie at $k_n = (2n+1)\pi/L$; the $k = 0$ TRIM is unoccupied.
+\item Visually, with 50 sample points per band, the two spectra differ by less than a single pixel. The structural distinction ($k = 0$ occupied vs not) is not visible at this resolution.
+\end{itemize}
+
+The numerical mean and max differences scale as $\pi/L = 0.063$ at $L = 50$, decreasing to $\pi/200 = 0.016$ at $L = 200$. Tabulated in Table~\ref{tab:spectrum_scale}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../notebook/figures/N1_spectrum.png}
+\caption{N1: Split-step DTQW spectrum at $L = 50$, $(\theta_1, \theta_2) = (\pi/3, \pi/4)$. Eigenvalues (markers) lie on the analytical bulk dispersion (gray) at the cylinder lattice $K_L^\cyl$ (left, blue) or the M\"obius lattice $K_L^\Mob$ (right, red). Dotted vertical lines mark the time-reversal-invariant momenta $k = 0$ and $k = \pi$. The cylinder spectrum includes $k = 0$; the M\"obius does not.}
+\label{fig:spectrum}
+\end{figure}
+
+\begin{table}[t]
+\caption{Mean and max $|\varepsilon^\Mob - \varepsilon^\cyl|$ for the split-step walker at $(\theta_1, \theta_2) = (\pi/3, \pi/4)$. The mean difference scales as $\pi/L$, the max also as $\pi/L$ up to $O(1)$ prefactors. All quantities computed from the sorted spectrum (per-index difference after sorting).}
+\label{tab:spectrum_scale}
+\begin{ruledtabular}
+\begin{tabular}{cccc}
+$L$ & $\pi/L$ & mean $|\Delta\varepsilon|$ & max $|\Delta\varepsilon|$ \\
+\hline
+4 & 0.785 & 0.524 & 0.666 \\
+8 & 0.393 & 0.262 & 0.338 \\
+50 & 0.063 & 0.042 & 0.054 \\
+200 & 0.016 & 0.011 & 0.014 \\
+\end{tabular}
+\end{ruledtabular}
+\end{table}
+
+\subsection{N2: Phase diagram modification (TRIM exclusion)}
+
+\textbf{Setup.} For each $(\theta_1, \theta_2)$ on an $81 \times 81$ grid in $[0, \pi]^2$, we compute the bulk gap
+\begin{equation}
+\Delta(\theta_1, \theta_2) = \min_{k \in K_L} \min\big(|\varepsilon(k)|, |\pi - |\varepsilon(k)||\big),
+\end{equation}
+i.e., the distance of the closest band to a gap closing ($\varepsilon = 0$ or $\varepsilon = \pi$), restricted to the cylinder or M\"obius momentum lattice. $L = 50$.
+
+\textbf{Observations} (Figure~\ref{fig:phase}).
+\begin{itemize}
+\item Cylinder and M\"obius gap heatmaps are visually nearly indistinguishable; both show the four phase-boundary structure (dark on diagonals).
+\item The difference panel $\Delta^\Mob - \Delta^\cyl$ shows a clear structure concentrated along the main diagonal $\theta_1 = \theta_2$. This is the $k = \pi$ TRIM gap-closing line, absent on M\"obius for even $L$.
+\item Maximum absolute difference: $\pi/L = 0.063$.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../notebook/figures/N2_phase_diagram.png}
+\caption{N2: Bulk gap $\Delta$ on cylinder (left), M\"obius (middle), and their difference (right) at $L = 50$. The first two panels are nearly identical visually; the difference panel reveals the TRIM-exclusion shift, concentrated along $\theta_1 = \theta_2$ (where the cylinder gap closes at $k = \pi$ but the M\"obius lattice excludes this momentum for even $L$). The shift magnitude is bounded by $\pi/L$.}
+\label{fig:phase}
+\end{figure}
+
+\subsection{N3: edge modes on a cut walker}
+
+\textbf{Setup.} The cut walker is constructed by zeroing the wraparound entry of $T$, yielding an open chain. For $\Sigma = -\I$, this construction is identical for cylinder and M\"obius (the BC is removed by the cut). $L = 80$.
+
+\textbf{Observations.} Edge-localized zero-quasi-energy modes appear in topologically non-trivial bulk phases, consistent with the standard chiral-DTQW bulk-edge correspondence of Asb\'oth and Edge~\cite{asbothEdge2015}. The result is independent of cylinder vs M\"obius framing, since the cut walker is the same operator in both cases. This experiment serves as a baseline confirming simulator correctness; it does \emph{not} provide M\"obius-specific information.
+
+\subsection{N4: return-amplitude signature}
+
+\textbf{Setup.} Initial state $\ket{x_0 = L/2, R}$, $L = 100$, $(\theta_1, \theta_2) = (\pi/3, \pi/4)$, $T \in [0, 4L]$. Return amplitude $|\mathcal{A}(T)| = |\bra{x_0, R} U^T \ket{x_0, R}|$ computed via the walker's eigendecomposition.
+
+\textbf{Observations} (Figure~\ref{fig:return}).
+\begin{itemize}
+\item Cylinder and M\"obius return traces are quantitatively similar at short times ($T < L$) where the walker has not yet ``felt'' the boundary.
+\item For $T \gtrsim L$, the cylinder and M\"obius traces diverge, with maximum $|\Delta\mathcal{A}| \approx 0.18$ at $T \approx 3L/2$ ($T \approx 349$).
+\item The lower panel difference plot shows oscillatory divergence with envelope concentrated near $T \in \{L, 2L, 3L\}$. The structure is consistent with the deck phase ($-1$ per full traversal) interacting constructively or destructively with the bulk-dispersive return.
+\end{itemize}
+
+This signature is dynamical, not topological, but is a useful experimentally-accessible diagnostic of the M\"obius BC at any finite $L$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../notebook/figures/N4_return_amplitude.png}
+\caption{N4: Return amplitude $|\mathcal{A}(T)|$ for cylinder (blue) and M\"obius (red) at $L = 100$, $(\theta_1, \theta_2) = (\pi/3, \pi/4)$, initial site $x_0 = L/2$. Lower panel: difference. Divergence is concentrated near integer multiples of the system size $T = L, 2L, 3L$, consistent with the deck-phase signature.}
+\label{fig:return}
+\end{figure}
+
+\subsection{Universality (Hadamard, Grover-3)}
+
+\textbf{Setup.} The Hadamard and three-state Grover walkers are parameter-free, so we compare their quasi-energy spectra directly between cylinder and M\"obius at $L = 50$.
+
+\textbf{Observations.} Both walkers exhibit the half-odd-integer momentum quantization on M\"obius. The mean spectrum shift between cylinder and M\"obius is $\pi/L = 0.063$ for Hadamard and $0.042$ for Grover-3 (the difference reflects the dimension of the coin space; Grover-3 has more degenerate spectral structure). One pair of eigenvalues in the Hadamard cylinder spectrum lies at $\varepsilon = \pi$ (a degenerate TRIM mode); the M\"obius walker has no such mode, producing a maximum per-eigenvalue difference of $\approx \pi/2$. This confirms Theorem~\ref{thm:T1}'s protocol-independence at the BC-quantization level.
+
+\subsection{N7: Szegedy spectrum on M\"obius ladder vs prism graph (Theorem~\ref{thm:ladder_spectrum})}
+
+\textbf{Setup.} $L = 30$. The adjacency matrices $A_{Y_L}$ and $A_{M_L}$ are constructed directly from the graph definitions and diagonalized; results are compared to the analytical formulas of Theorem~\ref{thm:ladder_spectrum}.
+
+\textbf{Observations} (Figure~\ref{fig:szegedy}).
+\begin{itemize}
+\item Numerical eigenvalues match the analytical formula for both graphs to maximum absolute error $5 \times 10^{-15}$.
+\item Prism $Y_{30}$ shows visible degeneracies (horizontal plateaus in the sorted-eigenvalue plot) at $\lambda = \pm 1, \pm 2$, characteristic of the integer-momentum quantization. M\"obius $M_{30}$ has the same overall envelope but no integer-momentum plateaus in the rung-antisymmetric sector.
+\item The corresponding Szegedy walker eigenvalues (on the unit circle) differ in the same sector-specific way.
+\end{itemize}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{../notebook/figures/N7_szegedy_contrast.png}
+\caption{N7: Adjacency spectra of $Y_{30}$ (prism, left) and $M_{30}$ (M\"obius ladder, right). Numerical eigenvalues (colored dots) match the analytical formula of Theorem~\ref{thm:ladder_spectrum} (black crosses) to absolute error $5 \times 10^{-15}$. The rung-symmetric sectors contribute identical eigenvalues to both graphs; the rung-antisymmetric sectors differ (integer momentum for $Y_L$, half-odd-integer momentum for $M_L$).}
+\label{fig:szegedy}
+\end{figure}
+
+\subsection{Winding-equality stress test}
+
+\textbf{Setup.} We compute the discrete winding $\nu_L(K)$ in the symmetric time frame at $40 \times 40$ grid points in $(\theta_1, \theta_2) \in [0.05, \pi - 0.05]^2$, for cylinder and M\"obius lattices at $L \in \{8, 50, 200\}$.
+
+\textbf{Observations.}
+\begin{itemize}
+\item At $L = 8$, the windings $\nu^\cyl_8$ and $\nu^\Mob_8$ disagree at 23 out of 2500 grid points---aliasing near phase boundaries, consistent with Lemma~\ref{lem:threshold}.
+\item At $L = 50$ and $L = 200$, the windings agree at all 2500 grid points. The aliasing threshold $L_0 \leq 50$ holds uniformly off the boundary lines.
+\item Empirical $L_0$ values for five interior test points: all $\in \{4, 5\}$. This is essentially the minimum $L$ at which a winding integer is meaningful.
+\end{itemize}
+
+These results validate Theorem~\ref{thm:winding} at every scanned grid point above the aliasing threshold.
+
+
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Why non-orientability does not lift the chiral DTQW classification}
+
+The canonical M\"obius walker with $\Sigma = -\I$ is, by the proof of Theorem~\ref{thm:T1}, the restriction of a $2L$-cylinder walker to an anti-periodic subspace. Restriction to an invariant subspace preserves all spectral properties of the parent operator that are diagonal in the restricting basis. The chiral symmetry $\Gamma = \sigx$ commutes with the deck operator $D = T^L \otimes \Sigma$ since $[\sigx, -\I] = 0$. Therefore, the chiral structure on cylinder lifts to M\"obius unchanged, and Theorem~\ref{thm:winding} formalizes the consequence: the integer winding is invariant under the cylinder-to-M\"obius momentum-lattice translation.
+
+The conceptual mechanism that \emph{could} reduce $\Z$ to $\Z_2$ in this setting would be a multi-valued chiral operator---one that doesn't extend globally to a section on the M\"obius walker. This would require $\Sigma$ and $\Gamma$ to satisfy $\{\Sigma, \Gamma\} = 0$ (anti-commutation), making $\Gamma$ change sign under the deck transformation. For $\Gamma = \sigx$, this would require $\Sigma$ to anti-commute with $\sigx$, e.g., $\Sigma \in \{\sigy, \sigz\}$. But by Proposition~\ref{prop:canonical_deck}, no such $\Sigma$ is compatible with the canonical walker structure.
+
+Therefore, the absence of a $\Z \to \Z_2$ reduction in the canonical M\"obius walker is not a coincidence but a structural consequence of the deck-operator constraint. The constraint is sharp: relaxing it requires a redesign of the walker (see Section~\ref{sec:outlook}).
+
+\subsection{Relationship to fermionic boundary conditions and anti-periodic Hamiltonians}
+
+The half-odd-integer momentum quantization of Theorem~\ref{thm:T1} is structurally identical to the well-known fermion-on-a-ring problem with anti-periodic boundary conditions in time: a path-integral fermion at finite temperature traverses an anti-periodic loop, giving Matsubara frequencies at $\omega_n = (2n+1)\pi T$ rather than $2\pi n T$~\cite{matsubara1955}. The DTQW Floquet-unitary setting realizes this momentum structure in a spatial direction instead of a temporal one.
+
+This connection suggests an interpretation: the canonical M\"obius walker is a Floquet system with a ``fermionic'' boundary condition on its spatial direction. Whether this interpretation leads to genuinely fermion-like phenomena (e.g., a parity anomaly) is, to our knowledge, an open question. We did not pursue it further in this work.
+
+\subsection{Relationship to Beugeling, Quelle, and Morais Smith}
+
+The Hamiltonian-tight-binding work of Beugeling, Quelle, and Morais Smith~\cite{beugeling2014} on M\"obius bands and their Floquet-driven extension~\cite{quelle2014} are the closest conceptual predecessors. Their setting is two-dimensional (a 2D band rolled into a M\"obius strip), and their topological invariant is the Chern number; they show that the Chern number is not globally definable on a non-orientable surface, but the quantum spin Hall effect survives in a modified form.
+
+Our setting is one-dimensional (a 1D position cycle with anti-periodic coin BC), and the invariant is the chiral winding $\nu$. We find no analogous obstruction: $\nu$ remains an integer on the M\"obius walker, with the cylinder-to-M\"obius transition realized by a uniform $\pi/L$ momentum-lattice shift that does not interact with the integrand. The contrast is informative: the 2D Chern-number obstruction is fundamentally tied to the global non-existence of an oriented 2-form on a non-orientable surface, while the 1D chiral winding is a periodic integral over a circle (the Brillouin zone), and a circle remains topologically the same under M\"obius identification of the spatial axis.
+
+\subsection{Relationship to Moradi and Annabestani's ``M\"obius Quantum Walk''}
+
+Moradi and Annabestani~\cite{moradi2017} previously introduced a quantum-walk construction also termed ``M\"obius quantum walk,'' but the construction is markedly different: their walker adds an auxiliary Hilbert-space rotation to the Hadamard quantum walk on a cycle, parameterizing the ``M\"obius factor'' $\alpha$ as the number of rotations per cycle. The questions addressed (uniform mixing distribution) are also distinct from topological classification. The deck-operator construction we adopt here, in which the M\"obius BC enters as $\Sigma$ acting on the coin Hilbert space at the wrap-around, does not appear in that work. We use the term ``M\"obius graph'' rather than ``M\"obius quantum walk'' for clarity, to distinguish our spatial-topology framing from theirs.
+
+\subsection{Where the M\"obius structure does enter}
+
+Two observables distinguish M\"obius from cylinder in a non-vanishing way:
+
+\textit{(a)} \textbf{Szegedy walker on $M_L$ (Corollary~\ref{thm:szegedy_contrast}).} The rung-antisymmetric sector of the M\"obius ladder adjacency carries an anti-periodic boundary condition that produces eigenvalues distinct from the prism graph. The Szegedy walker inherits this distinction in its spectrum, independent of any coin or chiral structure. This distinction is graph-theoretic; it does not vanish in the thermodynamic limit at fixed mode density.
+
+\textit{(b)} \textbf{Return-amplitude dynamics (Figure~\ref{fig:return}).} The M\"obius deck phase ($-1$ per full traversal) produces measurable cylinder-vs-M\"obius divergences in the return amplitude near $T \approx k \cdot L$ for integer $k$, with maximum amplitude $\sim 0.18$ in our $L = 100$ test. This is a dynamical, not topological, signature; it persists at any finite $L$ but its prominence relative to bulk-dispersive features depends on the parameter regime.
+
+Both observations support the broader conclusion: M\"obius non-orientability, in the canonical chiral DTQW setting, manifests primarily as finite-size boundary effects on coined walkers and as a coinless-walker spectral signature mediated by graph-theoretic symmetry decomposition.
+
+\subsection{Outlook}
+\label{sec:outlook}
+
+The central restriction of this work is the canonical deck operator $\Sigma = -\I$, the only choice compatible with the standard chiral split-step coin rotations. A natural extension that would relax this constraint---and likely admit richer non-orientable physics---is the \emph{intrinsic M\"obius walker} with a non-canonical deck operator (e.g., $\Sigma = \sigx$) and a redesigned shift structure that preserves unitarity at the wrap-around. With $\Sigma = \sigx$ and the natural chiral operator $\Gamma = \sigz$ (anti-commuting), the chiral operator becomes a non-trivial section of a $\Z_2$ bundle, which is the structural prerequisite for a genuine topological-invariant reduction. Such walkers cannot be realized as restrictions of cylinder walkers and require independent topological characterization. We leave this construction to a follow-up project.
+
+A second extension is to higher-dimensional spatial topologies. Two-dimensional walkers on Klein bottles (non-orientable 2-manifold without boundary) or on M\"obius strips with anti-periodic BC in one direction may exhibit topological phenomena not present in the 1D setting. The Beugeling-Quelle-Morais Smith results on M\"obius-band Hamiltonians provide a natural template for the discrete-time-walk analogue.
+
+Finally, beyond DTQW, M\"obius non-orientability in coined-walker frameworks may interact non-trivially with measurement-induced phase transitions, decoherence dynamics, or non-Hermitian extensions. The clean negative-result baseline established in this work makes it possible to identify, in any such extension, the precise channel through which non-orientability does enter the topological story.
+
+\subsection{A note on framing}
+
+This paper reports a negative result for the canonical M\"obius walker: spatial non-orientability does not alter the integer chiral topological classification. Negative results in topology classifications are useful---they constrain the space of physically realizable phenomena and rule out one path among many. We frame the work as a precise characterization rather than a dramatic discovery, and we identify two non-trivial structural distinctions (the Szegedy contrast and the return-amplitude dynamics) that survive the negative-result framing as legitimately new observations in the DTQW context. The deeper non-orientable physics, where it does exist, is most likely to be found in walkers that fall outside the canonical structure---a target the present work sharpens by ruling out where it does not live.
+
+
+\appendix
+
+\section{Explicit Bloch matrix calculation}
+\label{app:bloch}
+
+Starting from the walker (\ref{eq:walker}) with $T$ in momentum representation $T(k) = e^{ik}$:
+\begin{align}
+S_+(k) &= \begin{pmatrix} e^{ik} & 0 \\ 0 & 1 \end{pmatrix}, \\
+S_-(k) &= \begin{pmatrix} 1 & 0 \\ 0 & e^{-ik} \end{pmatrix}, \\
+R(\theta) &= \begin{pmatrix} c & -s \\ s & c \end{pmatrix}, \quad c = \cos(\theta/2),\; s = \sin(\theta/2).
+\end{align}
+
+Computing $U(k) = S_-(k) R(\theta_2) S_+(k) R(\theta_1)$ stepwise:
+\begin{align}
+S_+(k) R(\theta_1) &= \begin{pmatrix} c_1 e^{ik} & -s_1 e^{ik} \\ s_1 & c_1 \end{pmatrix}, \\
+R(\theta_2) S_+(k) R(\theta_1) &= \begin{pmatrix} c_1 c_2 e^{ik} - s_1 s_2 & -c_2 s_1 e^{ik} - s_2 c_1 \\ c_1 s_2 e^{ik} + c_2 s_1 & -s_1 s_2 e^{ik} + c_1 c_2 \end{pmatrix}.
+\end{align}
+Multiplying on the left by $S_-(k)$ (which multiplies the second row by $e^{-ik}$) gives Eq.~\eqref{eq:U_k_matrix}.
+
+The trace is $\Tr U(k) = c_1 c_2 e^{ik} - s_1 s_2 - s_1 s_2 + c_1 c_2 e^{-ik} = 2(c_1 c_2 \cos k - s_1 s_2)$, and the determinant is $\det U(k) = (e^{ik} \cdot e^{-ik} - $ off-diagonal cross terms$)$, which evaluates to $1$ after algebraic simplification. Therefore $U(k) \in \mathrm{SU}(2)$ and $\cos\varepsilon(k) = \frac{1}{2}\Tr U(k) = c_1 c_2 \cos k - s_1 s_2$.
+
+The asymmetric-frame Bloch coefficients (used in Proposition~\ref{prop:chiral}) are extracted from $U(k) = a_0 \I - i \mathbf{a} \cdot \boldsymbol{\sigma}$:
+\begin{align}
+a_0 &= c_1 c_2 \cos k - s_1 s_2 = \mathrm{Re}(U_{11}) = \mathrm{Re}(U_{22}), \\
+a_z &= -c_1 c_2 \sin k = -\mathrm{Im}(U_{11}) = +\mathrm{Im}(U_{22}), \\
+a_x &= c_2 s_1 \sin k = -\mathrm{Im}(U_{12}) = -\mathrm{Im}(U_{21}), \\
+a_y &= c_1 s_2 + c_2 s_1 \cos k = -\mathrm{Re}(U_{12}) = \mathrm{Re}(U_{21}).
+\end{align}
+
+\section{Time-frame change for chiral symmetry}
+\label{app:chiral_frame}
+
+In the asymmetric frame, with the Bloch vector $\mathbf{a}(k)$ from Appendix~\ref{app:bloch}, one checks that no fixed unit vector $\hat{\mathbf{n}}_\perp$ exists such that $\mathbf{a}(k) \cdot \hat{\mathbf{n}}_\perp = 0$ for all $(k, \theta_1, \theta_2)$. Specifically, decomposing
+\begin{equation}
+\mathbf{a}(k) = \sin k\, \mathbf{v}_1 + \cos k\, \mathbf{v}_2 + \mathbf{v}_3,
+\end{equation}
+with $\mathbf{v}_1 = (c_2 s_1, 0, -c_1 c_2)$, $\mathbf{v}_2 = (0, c_2 s_1, 0)$, $\mathbf{v}_3 = (0, c_1 s_2, 0)$, one finds that the local-in-$\theta$ plane containing $\mathbf{a}$ for all $k$ is $\mathrm{span}(\mathbf{v}_1, \hat{\mathbf{y}})$, with normal
+\begin{equation}
+\hat{\mathbf{n}}_\perp(\theta_1) = (\cos(\theta_1/2), 0, \sin(\theta_1/2)),
+\end{equation}
+which depends on $\theta_1$. The corresponding ``asymmetric-frame chiral operator''
+\begin{equation}
+\Gamma_{\rm asym}(\theta_1) = \cos(\theta_1/2) \sigx + \sin(\theta_1/2) \sigz
+\end{equation}
+is parameter-dependent, hence not suitable for a global topological classification.
+
+Applying the time-frame change $U_{\rm sym} = R(\theta_1/2) U R(-\theta_1/2)$, which uses $R(\theta_1) R(-\theta_1/2) = R(\theta_1/2)$, yields the symmetric form (\ref{eq:U_sym}). Conjugation by $R(\theta_1/2)$ acts as a rotation in the $xz$-plane by angle $-\theta_1/2$, mapping the asymmetric-frame plane $\mathrm{span}(\mathbf{v}_1, \hat{\mathbf{y}})$ to the fixed plane $\mathrm{span}(\hat{\mathbf{z}}, \hat{\mathbf{y}})$ (i.e., the $yz$-plane), independently of $\theta_1$. The chiral operator in the symmetric frame is therefore $\Gamma_{\rm sym} = \sigx$, parameter-independent.
+
+
+\section{M\"obius ladder eigenvector catalog}
+\label{app:eigenvectors}
+
+For both the prism $Y_L$ and the M\"obius ladder $M_L$, the rung-symmetric eigenvectors are
+\begin{equation}
+\psi^{(n,+)}(x, r) = \frac{1}{\sqrt{2L}} e^{2\pi i n x / L}, \quad r \in \{0, 1\},
+\end{equation}
+with eigenvalue $\lambda_+^{(n)} = 2\cos(2\pi n/L) + 1$, for $n = 0, \dots, L-1$.
+
+The rung-antisymmetric eigenvectors of the prism graph are
+\begin{equation}
+\psi^{(n,-),Y_L}(x, r) = \frac{(-1)^r}{\sqrt{2L}} e^{2\pi i n x / L},
+\end{equation}
+with eigenvalue $\lambda_-^{(n), Y_L} = 2\cos(2\pi n/L) - 1$.
+
+The rung-antisymmetric eigenvectors of the M\"obius ladder are
+\begin{equation}
+\psi^{(n,-),M_L}(x, r) = \frac{(-1)^r}{\sqrt{2L}} e^{i(2n+1)\pi x / L},
+\end{equation}
+with eigenvalue $\lambda_-^{(n), M_L} = 2\cos((2n+1)\pi/L) - 1$.
+
+Direct substitution verifies $A_G \psi^{(n, \pm), G} = \lambda_\pm^{(n), G} \psi^{(n, \pm), G}$ for both $G$. Numerical verification at $L \in \{10, 20\}$ gives maximum residual $\|A\psi - \lambda\psi\| < 3 \times 10^{-15}$ for all $4L$ eigenvectors.
+
+
+\bibliographystyle{apsrev4-2}
+\bibliography{refs}
+
+\end{document}
